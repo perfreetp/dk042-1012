@@ -66,6 +66,7 @@ const groupConfig: {
 const MyRequestsPage: React.FC = () => {
   const allHelpers = useAppStore((s) => s.helpers);
   const [refreshing, setRefreshing] = useState(false);
+  const [scrollIntoView, setScrollIntoView] = useState<string>('');
 
   const helpers = useMemo(
     () => allHelpers.filter((h) => h.publisherId === currentUser.id),
@@ -122,8 +123,8 @@ const MyRequestsPage: React.FC = () => {
   };
 
   const scrollToGroup = (key: GroupKey) => {
-    const el = document.getElementById(`group-${key}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setScrollIntoView(`group-${key}`);
+    setTimeout(() => setScrollIntoView(''), 100);
   };
 
   return (
@@ -153,6 +154,8 @@ const MyRequestsPage: React.FC = () => {
         scrollY
         enhanced
         showScrollbar={false}
+        scrollIntoView={scrollIntoView}
+        scrollWithAnimation
         refresherEnabled
         refresherTriggered={refreshing}
         onRefresherRefresh={handleRefresh}

@@ -192,3 +192,10 @@ export const mockCreditRecords: CreditRecord[] = [
 ];
 
 export const currentUser = mockUsers[0];
+
+export const adminUser = {
+  ...mockUsers[0],
+  id: 'admin_001',
+  name: '社区管理员',
+  avatar: 'https://picsum.photos/id/237/200/200'
+};

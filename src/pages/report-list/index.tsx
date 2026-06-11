@@ -109,6 +109,31 @@ const ReportListPage: React.FC = () => {
                     </Text>
                   </View>
                 )}
+
+                {r.processHistory && r.processHistory.length > 0 && (
+                  <View className={styles.historySection}>
+                    <View className={styles.historyTitle}>处理历史</View>
+                    {r.processHistory
+                      .slice()
+                      .reverse()
+                      .map((h) => (
+                        <View key={h.id} className={styles.historyItem}>
+                          <View className={styles.historyHeader}>
+                            <Text className={styles.historyOperator}>{h.operatorName}</Text>
+                            <Text className={styles.historyAction}>
+                              {h.action === 'process'
+                                ? '标记处理'
+                                : h.action === 'reject'
+                                ? '驳回举报'
+                                : '重新打开'}
+                            </Text>
+                            <Text className={styles.historyTime}>{formatTime(h.timestamp)}</Text>
+                          </View>
+                          {h.note && <View className={styles.historyNote}>{h.note}</View>}
+                        </View>
+                      ))}
+                  </View>
+                )}
               </View>
             );
           })

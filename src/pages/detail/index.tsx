@@ -46,8 +46,58 @@ const DetailPage: React.FC = () => {
 
   const progressSteps = useMemo(() => {
     if (!helper) return [];
-    const steps = [
+
+    if (helper.status === 'pending_review') {
+      return [
+        { key: 'created', title: '发布求助', desc: formatTime(helper.createdAt), done: true },
+        {
+          key: 'review',
+          title: '审核中',
+          desc: '等待管理员审核',
+          done: false,
+          current: true
+        },
+        { key: 'public', title: '进入公开广场', desc: '审核通过后展示', done: false },
+        { key: 'complete', title: '互助完成', desc: '等待完成确认', done: false }
+      ];
+    }
+
+    const lastApproveLog = helper.auditLogs?.filter((l) => l.action === 'approve').slice(-1)[0];
+    const lastRejectLog = helper.auditLogs?.filter((l) => l.action === 'reject').slice(-1)[0];
+
+    if (helper.status === 'cancelled' && lastRejectLog) {
+      return [
+        { key: 'created', title: '发布求助', desc: formatTime(helper.createdAt), done: true },
+        {
+          key: 'review',
+          title: '审核中',
+          desc: lastApproveLog ? formatTime(lastApproveLog.timestamp) : '管理员审核中',
+          done: true
+        },
+        {
+          key: 'rejected',
+          title: '被驳回结束',
+          desc: lastRejectLog.note || '内容不符合社区规范',
+          done: true
+        }
+      ];
+    }
+
+    if (helper.status === 'cancelled') {
+      return [
+        { key: 'created', title: '发布求助', desc: formatTime(helper.createdAt), done: true },
+        { key: 'cancelled', title: '求助已取消', desc: helper.cancelReason || '用户取消', done: true }
+      ];
+    }
+
+    return [
       { key: 'created', title: '发布求助', desc: formatTime(helper.createdAt), done: true },
+      {
+        key: 'review',
+        title: '审核通过',
+        desc: lastApproveLog ? formatTime(lastApproveLog.timestamp) : '已进入公开广场',
+        done: true
+      },
       {
         key: 'accepted',
         title: '有人响应',
@@ -67,13 +117,6 @@ const DetailPage: React.FC = () => {
         done: helper.status === 'completed'
       }
     ];
-    if (helper.status === 'cancelled') {
-      return [
-        { key: 'created', title: '发布求助', desc: formatTime(helper.createdAt), done: true },
-        { key: 'cancelled', title: '求助已取消', desc: helper.cancelReason || '用户取消', done: true }
-      ];
-    }
-    return steps;
   }, [helper]);
 
   if (!helper) {
@@ -278,15 +321,65 @@ const DetailPage: React.FC = () => {
         <View className={styles.progressTimeline}>
           {progressSteps.map((step) => (
             <View key={step.key} className={styles.timelineItem}>
-              <View className={classnames(styles.timelineDot, step.done ? styles.done : styles.pending)} />
+              <View
+                className={classnames(
+                  styles.timelineDot,
+                  step.done ? styles.done : step.current ? styles.current : styles.pending
+                )}
+              />
               <View className={styles.timelineContent}>
-                <Text className={styles.timelineTitle}>{step.title}</Text>
+                <Text
+                  className={classnames(
+                    styles.timelineTitle,
+                    step.current && styles.currentTitle
+                  )}
+                >
+                  {step.title}
+                </Text>
                 <Text className={styles.timelineDesc}>{step.desc}</Text>
               </View>
             </View>
           ))}
         </View>
       </View>
+
+      {helper.auditLogs && helper.auditLogs.length > 0 && (
+        <View className={styles.card}>
+          <View className={styles.cardTitle}>审核记录</View>
+          <View className={styles.auditList}>
+            {helper.auditLogs.map((log) => (
+              <View key={log.id} className={styles.auditItem}>
+                <View
+                  className={[
+                    styles.auditIcon,
+                    log.action === 'approve'
+                      ? styles.auditApprove
+                      : log.action === 'reject'
+                      ? styles.auditReject
+                      : styles.auditReopen
+                  ].join(' ')}
+                >
+                  {log.action === 'approve' && '✅'}
+                  {log.action === 'reject' && '❌'}
+                  {log.action === 'reopen' && '↩️'}
+                </View>
+                <View className={styles.auditContent}>
+                  <View className={styles.auditTitle}>
+                    <Text className={styles.auditOperator}>{log.operatorName}</Text>
+                    <Text className={styles.auditAction}>
+                      {log.action === 'approve' && '审核通过'}
+                      {log.action === 'reject' && '审核驳回'}
+                      {log.action === 'reopen' && '重新提交审核'}
+                    </Text>
+                  </View>
+                  <View className={styles.auditTime}>{formatTime(log.timestamp)}</View>
+                  {log.note && <View className={styles.auditNote}>{log.note}</View>}
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
 
       <View className={styles.card}>
         <View className={styles.cardTitle}>发布人</View>

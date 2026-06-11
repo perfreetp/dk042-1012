@@ -197,3 +197,63 @@
   color: #666666;
   line-height: 1.5;
 }
+
+.historySection {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed #E0E0E0;
+}
+
+.historyTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #666666;
+  margin-bottom: 12px;
+}
+
+.historyItem {
+  padding: 12px 0;
+  border-bottom: 1px solid #F5F5F5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.historyOperator {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.historyAction {
+  font-size: 22px;
+  font-weight: 500;
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: #F0F7FF;
+  color: #4C9AFF;
+}
+
+.historyTime {
+  font-size: 22px;
+  color: #999999;
+  margin-left: auto;
+}
+
+.historyNote {
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: #F7F5F3;
+  border-radius: 10px;
+  font-size: 24px;
+  color: #666666;
+  line-height: 1.5;
+}

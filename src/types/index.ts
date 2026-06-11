@@ -1,4 +1,23 @@
 export type HelperType = 'express' | 'care' | 'move' | 'tool' | 'run';
+
+export interface AuditLog {
+  id: string;
+  operatorId: string;
+  operatorName: string;
+  action: 'approve' | 'reject' | 'reopen';
+  note?: string;
+  timestamp: string;
+}
+
+export interface ReportProcessHistory {
+  id: string;
+  operatorId: string;
+  operatorName: string;
+  action: 'process' | 'reject' | 'reopen';
+  resultStatus: 'pending' | 'processed' | 'rejected';
+  note?: string;
+  timestamp: string;
+}
 export type UrgentLevel = 'high' | 'medium' | 'low';
 export type HelperStatus = 'pending_review' | 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
 export type RewardType = 'free' | 'money' | 'gift' | 'exchange';
@@ -47,6 +66,7 @@ export interface HelperRequest {
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
+  auditLogs: AuditLog[];
 }
 
 export interface HelperMessage {
@@ -122,5 +142,6 @@ export interface ReportItem {
   images: string[];
   status: 'pending' | 'processed' | 'rejected';
   handleNote?: string;
+  processHistory: ReportProcessHistory[];
   createdAt: string;
 }

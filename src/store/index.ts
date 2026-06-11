@@ -1,7 +1,15 @@
 import { create } from 'zustand';
-import type { HelperRequest, HelperMessage, AddressItem, ReportItem, UserInfo } from '@/types';
+import type {
+  HelperRequest,
+  HelperMessage,
+  AddressItem,
+  ReportItem,
+  UserInfo,
+  AuditLog,
+  ReportProcessHistory
+} from '@/types';
 import { mockHelpers } from '@/data/helpers';
-import { mockAddresses, mockBlacklist, currentUser } from '@/data/notices';
+import { mockAddresses, mockBlacklist, currentUser, adminUser } from '@/data/notices';
 import { generateId } from '@/utils';
 
 interface AppState {
@@ -28,12 +36,14 @@ interface AppState {
   setDefaultAddress: (id: string) => void;
   getDefaultAddress: () => AddressItem | undefined;
 
-  addReport: (report: Omit<ReportItem, 'id' | 'status' | 'createdAt'>) => void;
+  addReport: (report: Omit<ReportItem, 'id' | 'status' | 'createdAt' | 'processHistory'>) => void;
   processReport: (id: string, approved: boolean, handleNote?: string) => void;
+  reopenReport: (id: string, handleNote?: string) => void;
+  reopenHelper: (helperId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
-  helpers: [...mockHelpers],
+  helpers: mockHelpers.map((h) => ({ ...h, auditLogs: h.auditLogs || [] })),
   addresses: [...mockAddresses],
   reports: [],
   currentUser,
@@ -130,25 +140,65 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   approveHelper: (helperId: string) =>
     set((state) => ({
-      helpers: state.helpers.map((h) =>
-        h.id === helperId
-          ? { ...h, status: 'pending', updatedAt: new Date().toISOString() }
-          : h
-      )
+      helpers: state.helpers.map((h) => {
+        if (h.id !== helperId) return h;
+        const log: AuditLog = {
+          id: generateId(),
+          operatorId: adminUser.id,
+          operatorName: adminUser.name,
+          action: 'approve',
+          timestamp: new Date().toISOString()
+        };
+        return {
+          ...h,
+          status: 'pending',
+          updatedAt: new Date().toISOString(),
+          auditLogs: [...(h.auditLogs || []), log]
+        };
+      })
     })),
 
   rejectHelper: (helperId, reason) =>
     set((state) => ({
-      helpers: state.helpers.map((h) =>
-        h.id === helperId
-          ? {
-              ...h,
-              status: 'cancelled',
-              cancelReason: `管理员驳回：${reason}`,
-              updatedAt: new Date().toISOString()
-            }
-          : h
-      )
+      helpers: state.helpers.map((h) => {
+        if (h.id !== helperId) return h;
+        const log: AuditLog = {
+          id: generateId(),
+          operatorId: adminUser.id,
+          operatorName: adminUser.name,
+          action: 'reject',
+          note: reason,
+          timestamp: new Date().toISOString()
+        };
+        return {
+          ...h,
+          status: 'cancelled',
+          cancelReason: `管理员驳回：${reason}`,
+          updatedAt: new Date().toISOString(),
+          auditLogs: [...(h.auditLogs || []), log]
+        };
+      })
+    })),
+
+  reopenHelper: (helperId) =>
+    set((state) => ({
+      helpers: state.helpers.map((h) => {
+        if (h.id !== helperId) return h;
+        const log: AuditLog = {
+          id: generateId(),
+          operatorId: adminUser.id,
+          operatorName: adminUser.name,
+          action: 'reopen',
+          timestamp: new Date().toISOString()
+        };
+        return {
+          ...h,
+          status: 'pending_review',
+          cancelReason: undefined,
+          updatedAt: new Date().toISOString(),
+          auditLogs: [...(h.auditLogs || []), log]
+        };
+      })
     })),
 
   addAddress: (addr) =>
@@ -196,6 +246,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           ...report,
           id: generateId(),
           status: 'pending',
+          processHistory: [],
           createdAt: new Date().toISOString()
         },
         ...state.reports
@@ -204,14 +255,45 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   processReport: (id, approved, handleNote) =>
     set((state) => ({
-      reports: state.reports.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              status: approved ? 'processed' : 'rejected',
-              handleNote: handleNote || r.handleNote
-            }
-          : r
-      )
+      reports: state.reports.map((r) => {
+        if (r.id !== id) return r;
+        const history: ReportProcessHistory = {
+          id: generateId(),
+          operatorId: adminUser.id,
+          operatorName: adminUser.name,
+          action: approved ? 'process' : 'reject',
+          resultStatus: approved ? 'processed' : 'rejected',
+          note: handleNote,
+          timestamp: new Date().toISOString()
+        };
+        return {
+          ...r,
+          status: approved ? 'processed' : 'rejected',
+          handleNote: handleNote || r.handleNote,
+          processHistory: [...(r.processHistory || []), history]
+        };
+      })
+    })),
+
+  reopenReport: (id, handleNote) =>
+    set((state) => ({
+      reports: state.reports.map((r) => {
+        if (r.id !== id) return r;
+        const history: ReportProcessHistory = {
+          id: generateId(),
+          operatorId: adminUser.id,
+          operatorName: adminUser.name,
+          action: 'reopen',
+          resultStatus: 'pending',
+          note: handleNote,
+          timestamp: new Date().toISOString()
+        };
+        return {
+          ...r,
+          status: 'pending',
+          handleNote: handleNote || r.handleNote,
+          processHistory: [...(r.processHistory || []), history]
+        };
+      })
     }))
 }));
