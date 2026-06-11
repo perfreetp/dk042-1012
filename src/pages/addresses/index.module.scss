@@ -1,0 +1,113 @@
+.page {
+  min-height: 100vh;
+  background: #F7F5F3;
+  padding-bottom: 160px;
+}
+
+.list {
+  margin: 24px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.addrItem {
+  padding: 28px 24px;
+  border-bottom: 1px solid #F5F2EF;
+  position: relative;
+}
+
+.addrItem:last-child {
+  border-bottom: none;
+}
+
+.addrHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.defaultTag {
+  padding: 4px 16px;
+  background: #FF7A45;
+  color: #FFFFFF;
+  font-size: 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.addrTitle {
+  font-size: 30px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.addrDetail {
+  margin-top: 12px;
+  font-size: 26px;
+  color: #666666;
+  line-height: 1.5;
+}
+
+.addrRemark {
+  margin-top: 8px;
+  font-size: 24px;
+  color: #999999;
+}
+
+.addrActions {
+  display: flex;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed #F0EBE6;
+  gap: 32px;
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 24px;
+  color: #666666;
+}
+
+.actionIcon {
+  font-size: 28px;
+}
+
+.setDefault {
+  color: #FF7A45;
+  font-weight: 500;
+}
+
+.editAction {
+  margin-left: auto;
+}
+
+.emptyWrap {
+  padding: 120px 48px;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 32px calc(24px + env(safe-area-inset-bottom));
+  background: #FFFFFF;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.addBtn {
+  width: 100%;
+  height: 88px;
+  background: linear-gradient(135deg, #FF7A45 0%, #FFA371 100%);
+  border-radius: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 600;
+  color: #FFFFFF;
+}

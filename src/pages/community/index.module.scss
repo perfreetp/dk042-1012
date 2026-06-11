@@ -1,0 +1,302 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.header {
+  background: linear-gradient(135deg, #722ED1 0%, #9254DE 100%);
+  padding: $spacing-xl $page-padding 56rpx;
+  padding-top: calc(#{$spacing-xl} + env(safe-area-inset-top));
+  border-radius: 0 0 40rpx 40rpx;
+}
+
+.title {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: 8rpx;
+}
+
+.subtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.tabs {
+  display: flex;
+  margin-top: $spacing-lg;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-button;
+  padding: 6rpx;
+}
+
+.tab {
+  flex: 1;
+  height: 68rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &.active {
+    background: $color-text-white;
+    color: #722ED1;
+    font-weight: $font-weight-semibold;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.content {
+  padding: 0 $page-padding;
+  margin-top: -24rpx;
+}
+
+.topBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2rpx 12rpx;
+  background: $color-error;
+  color: $color-text-white;
+  border-radius: $radius-xs;
+  font-size: 20rpx;
+  font-weight: $font-weight-medium;
+  margin-right: $spacing-xs;
+  flex-shrink: 0;
+}
+
+.typeBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2rpx 12rpx;
+  border-radius: $radius-xs;
+  font-size: 20rpx;
+  font-weight: $font-weight-medium;
+  margin-right: $spacing-xs;
+  flex-shrink: 0;
+}
+
+.noticeCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+.noticeHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+  flex-wrap: wrap;
+  gap: $spacing-xs 0;
+}
+
+.noticeTitle {
+  flex: 1;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  min-width: 0;
+  @include text-ellipsis;
+}
+
+.noticeMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: $spacing-sm;
+}
+
+.publisher {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.time {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.thanksCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+.thanksHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.thanksAvatars {
+  position: relative;
+  width: 120rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+}
+
+.avatar {
+  position: absolute;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: $radius-round;
+  border: 3rpx solid $color-bg-card;
+
+  &.to {
+    left: 0;
+    top: 0;
+    z-index: 1;
+  }
+
+  &.from {
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+  }
+}
+
+.thanksUsers {
+  flex: 1;
+  min-width: 0;
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-bottom: 4rpx;
+}
+
+.userName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  @include text-ellipsis;
+  max-width: 180rpx;
+}
+
+.arrow {
+  color: $color-primary;
+  font-weight: $font-weight-bold;
+}
+
+.toName {
+  font-size: $font-size-md;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.helperTitle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  background: $color-bg-section;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  display: inline-block;
+  @include text-ellipsis;
+  max-width: 100%;
+}
+
+.thanksContent {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: $line-height-loose;
+  margin-bottom: $spacing-md;
+  @include text-ellipsis-multi(3);
+}
+
+.thanksFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.timeText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.actionIcon {
+  font-size: $font-size-md;
+}
+
+.entryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.entryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-md $spacing-xs;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+.entryIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+}
+
+.entryLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}

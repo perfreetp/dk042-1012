@@ -1,0 +1,247 @@
+.page {
+  min-height: 100vh;
+  background: #F7F5F3;
+  padding-bottom: 160px;
+}
+
+.tipCard {
+  margin: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFFFFF 100%);
+  border-radius: 20px;
+  border-left: 4px solid #F53F3F;
+}
+
+.tipTitle {
+  font-size: 28px;
+  font-weight: 600;
+  color: #F53F3F;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tipText {
+  margin-top: 12px;
+  font-size: 24px;
+  color: #888888;
+  line-height: 1.6;
+}
+
+.formSection {
+  margin: 0 24px 24px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 8px 24px;
+}
+
+.formRow {
+  display: flex;
+  align-items: center;
+  padding: 28px 0;
+  border-bottom: 1px solid #F5F2EF;
+  gap: 24px;
+}
+
+.formRow:last-child {
+  border-bottom: none;
+}
+
+.formLabel {
+  font-size: 28px;
+  color: #333333;
+  font-weight: 500;
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.formLabelRequired::before {
+  content: '*';
+  color: #F53F3F;
+  margin-right: 6px;
+}
+
+.formValue {
+  flex: 1;
+  font-size: 28px;
+  color: #333333;
+  text-align: right;
+}
+
+.placeholder {
+  color: #BBBBBB;
+}
+
+.arrow {
+  font-size: 32px;
+  color: #CCCCCC;
+  flex-shrink: 0;
+}
+
+.reasonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 0 24px 8px;
+}
+
+.reasonItem {
+  padding: 24px 16px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 2px solid #F0EBE6;
+  text-align: center;
+  font-size: 26px;
+  color: #666666;
+  transition: all 0.2s;
+}
+
+.reasonSelected {
+  border-color: #FF7A45;
+  background: #FFF2EC;
+  color: #FF7A45;
+  font-weight: 500;
+}
+
+.detailArea {
+  margin: 0 24px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.textareaLabel {
+  font-size: 28px;
+  font-weight: 500;
+  color: #333333;
+}
+
+.textareaBox {
+  margin-top: 16px;
+  width: 100%;
+  height: 240px;
+  background: #FAFAFA;
+  border-radius: 16px;
+  padding: 20px;
+  font-size: 26px;
+  color: #333333;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.uploadSection {
+  margin: 24px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 28px 24px;
+}
+
+.uploadTitle {
+  font-size: 28px;
+  font-weight: 500;
+  color: #333333;
+}
+
+.uploadTip {
+  margin-top: 8px;
+  font-size: 22px;
+  color: #999999;
+}
+
+.uploadGrid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.uploadItem {
+  aspect-ratio: 1;
+  background: #FAFAFA;
+  border-radius: 12px;
+  border: 1px dashed #E0E0E0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.uploadIcon {
+  font-size: 48px;
+  color: #CCCCCC;
+}
+
+.uploadText {
+  font-size: 20px;
+  color: #BBBBBB;
+}
+
+.contactRow {
+  margin: 0 24px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.contactTitle {
+  font-size: 28px;
+  font-weight: 500;
+  color: #333333;
+}
+
+.contactTip {
+  margin-top: 8px;
+  font-size: 22px;
+  color: #999999;
+}
+
+.inputBox {
+  margin-top: 16px;
+  width: 100%;
+  height: 88px;
+  background: #FAFAFA;
+  border-radius: 16px;
+  padding: 0 24px;
+  font-size: 26px;
+  color: #333333;
+  box-sizing: border-box;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 32px calc(20px + env(safe-area-inset-bottom));
+  background: #FFFFFF;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: 20px;
+}
+
+.cancelBtn {
+  flex: 1;
+  height: 88px;
+  border-radius: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  background: #F7F5F3;
+  color: #666666;
+}
+
+.submitBtn {
+  flex: 2;
+  height: 88px;
+  border-radius: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #F53F3F 0%, #FF6666 100%);
+  color: #FFFFFF;
+}

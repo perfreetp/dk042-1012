@@ -1,0 +1,45 @@
+// ============================================
+// 邻里互助 - 主题配色变量
+// ============================================
+
+// 品牌主题色：温暖橙色系 - 代表温暖、帮助、活力
+$color-primary: #FF7A45;
+$color-primary-light: #FFB085;
+$color-primary-dark: #E85A1C;
+$color-primary-gradient: linear-gradient(135deg, #FF7A45 0%, #FF9A6B 100%);
+$color-primary-bg: #FFF2EC;
+
+// 功能色 - 语义化
+$color-success: #36B37E;
+$color-warning: #FFAB00;
+$color-error: #F53F3F;
+$color-info: #4C9AFF;
+
+// 紧急程度 - 业务色
+$color-urgent-high: #F53F3F;
+$color-urgent-medium: #FFAB00;
+$color-urgent-low: #36B37E;
+
+// 背景色
+$color-bg-page: #FFF9F5;
+$color-bg-card: #ffffff;
+$color-bg-hover: #FFF2EC;
+$color-bg-section: #FFF5EF;
+
+// 文本色
+$color-text-primary: #2D1F1F;
+$color-text-secondary: #6B5757;
+$color-text-tertiary: #9C8A8A;
+$color-text-disabled: #D4C8C8;
+$color-text-white: #ffffff;
+
+// 边框色
+$color-border: #F0E6E0;
+$color-divider: #F7EFEA;
+
+// 求助类型色
+$color-type-express: #4C9AFF;
+$color-type-care: #722ED1;
+$color-type-move: #F53F3F;
+$color-type-tool: #36B37E;
+$color-type-run: #FF7A45;
