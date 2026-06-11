@@ -13,7 +13,8 @@ export default defineAppConfig({
     'pages/addresses/index',
     'pages/thanks-detail/index',
     'pages/notice-detail/index',
-    'pages/report/index'
+    'pages/report/index',
+    'pages/admin/index'
   ],
   window: {
     backgroundTextStyle: 'light',

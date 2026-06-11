@@ -3,31 +3,32 @@ import { View, Text, Input, Button, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import HelperCard from '@/components/HelperCard';
 import EmptyState from '@/components/EmptyState';
-import { mockHelpers } from '@/data/helpers';
+import { useAppStore } from '@/store';
 import type { HelperRequest } from '@/types';
 import styles from './index.module.scss';
 
 const hotKeywords = ['快递', '看孩子', '搬家', '借工具', '买药', '遛狗', '打酱油', '扛东西'];
 
 const SearchPage: React.FC = () => {
+  const helpers = useAppStore((s) => s.helpers);
   const [keyword, setKeyword] = useState('');
   const [searched, setSearched] = useState(false);
   const [history, setHistory] = useState<string[]>(['借梯子', '取快递']);
 
   useDidShow(() => {
-    console.log('[Search] page show');
+    console.log('[Search] page show, helpers:', helpers.length);
   });
 
   const results = useMemo(() => {
     if (!keyword.trim()) return [];
     const kw = keyword.trim().toLowerCase();
-    return mockHelpers.filter(h =>
+    return helpers.filter(h =>
       h.title.toLowerCase().includes(kw) ||
       h.description.toLowerCase().includes(kw) ||
       h.building.includes(kw) ||
       h.type.toLowerCase().includes(kw)
     );
-  }, [keyword]);
+  }, [keyword, helpers]);
 
   const handleSearch = () => {
     if (!keyword.trim()) return;

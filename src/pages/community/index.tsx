@@ -72,7 +72,7 @@ const CommunityPage: React.FC = () => {
   };
 
   const handleAdmin = () => {
-    Taro.showToast({ title: '管理员功能开发中', icon: 'none' });
+    Taro.navigateTo({ url: '/pages/admin/index' });
   };
 
   const handleVolunteer = () => {

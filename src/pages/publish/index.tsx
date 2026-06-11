@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Input, Textarea, Button, Picker } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import classnames from 'classnames';
 import dayjs from 'dayjs';
-import type { HelperType, UrgentLevel, RewardType } from '@/types';
+import type { HelperType, UrgentLevel, RewardType, AddressItem } from '@/types';
 import { helperTypeList, urgentLevelList, rewardTypeList, generateId } from '@/utils';
-import { currentUser, mockAddresses } from '@/data/notices';
+import { currentUser } from '@/data/notices';
+import { useAppStore } from '@/store';
 import styles from './index.module.scss';
 
 const PublishPage: React.FC = () => {
+  const addHelper = useAppStore((s) => s.addHelper);
+  const addresses = useAppStore((s) => s.addresses);
+  const getDefaultAddress = useAppStore((s) => s.getDefaultAddress);
+
   const [type, setType] = useState<HelperType>('express');
   const [urgentLevel, setUrgentLevel] = useState<UrgentLevel>('medium');
   const [title, setTitle] = useState('');
@@ -19,26 +24,79 @@ const PublishPage: React.FC = () => {
   const [endTime, setEndTime] = useState(dayjs().add(3, 'hour').format('HH:mm'));
   const [rewardType, setRewardType] = useState<RewardType>('free');
   const [rewardDetail, setRewardDetail] = useState('邻里互助，感谢帮忙~');
-  const [building, setBuilding] = useState(mockAddresses[0]?.building || '');
-  const [unit, setUnit] = useState(mockAddresses[0]?.unit || '');
-  const [room, setRoom] = useState(mockAddresses[0]?.room || '');
-  const [addressDetail, setAddressDetail] = useState(mockAddresses[0]?.detail || '');
+  const [building, setBuilding] = useState('');
+  const [unit, setUnit] = useState('');
+  const [room, setRoom] = useState('');
+  const [addressDetail, setAddressDetail] = useState('');
   const [maxResponders, setMaxResponders] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedAddrId, setSelectedAddrId] = useState<string | undefined>();
+
+  const applyAddress = (addr: AddressItem) => {
+    setBuilding(addr.building);
+    setUnit(addr.unit);
+    setRoom(addr.room);
+    setAddressDetail(addr.detail);
+    setSelectedAddrId(addr.id);
+  };
 
   useDidShow(() => {
-    console.log('[Publish] page show');
+    const def = getDefaultAddress();
+    if (def) {
+      applyAddress(def);
+    }
   });
 
   const isFormValid = () => {
-    return type && urgentLevel && title.trim() && description.trim() &&
-           startDate && startTime && endDate && endTime &&
-           rewardType && building && unit;
+    return (
+      type &&
+      urgentLevel &&
+      title.trim() &&
+      description.trim() &&
+      startDate &&
+      startTime &&
+      endDate &&
+      endTime &&
+      rewardType &&
+      building &&
+      unit
+    );
   };
 
   const handleChangeMaxResp = (delta: number) => {
     const next = Math.max(1, Math.min(10, maxResponders + delta));
     setMaxResponders(next);
+  };
+
+  const handleChooseAddress = () => {
+    if (addresses.length === 0) {
+      Taro.showActionSheet({
+        itemList: ['去添加常用地址'],
+        success: () => {
+          Taro.navigateTo({ url: '/pages/addresses/index' });
+        }
+      });
+      return;
+    }
+    const list = addresses.map((a) => {
+      const tag = a.isDefault ? '[默认] ' : '';
+      return `${tag}${a.building}${a.unit}${a.room}${a.detail ? ' · ' + a.detail : ''}`;
+    });
+    list.push('手动输入新地址');
+    Taro.showActionSheet({
+      itemList: list,
+      success: (res) => {
+        if (res.tapIndex === list.length - 1) {
+          setSelectedAddrId(undefined);
+          setBuilding('');
+          setUnit('');
+          setRoom('');
+          setAddressDetail('');
+        } else {
+          applyAddress(addresses[res.tapIndex]);
+        }
+      }
+    });
   };
 
   const handleSubmit = () => {
@@ -69,7 +127,8 @@ const PublishPage: React.FC = () => {
       startTime: dayjs(`${startDate} ${startTime}`).toISOString(),
       endTime: dayjs(`${endDate} ${endTime}`).toISOString(),
       rewardType,
-      rewardDetail: rewardDetail || rewardTypeList.find(r => r.key === rewardType)?.label || '',
+      rewardDetail:
+        rewardDetail || rewardTypeList.find((r) => r.key === rewardType)?.label || '',
       maxResponders,
       responders: [],
       messages: [],
@@ -77,15 +136,15 @@ const PublishPage: React.FC = () => {
       updatedAt: new Date().toISOString()
     };
 
-    console.log('[Publish] submit:', newHelper);
+    addHelper(newHelper);
 
     setTimeout(() => {
       setSubmitting(false);
       Taro.showToast({ title: '发布成功！', icon: 'success' });
       setTimeout(() => {
         Taro.switchTab({ url: '/pages/home/index' });
-      }, 1000);
-    }, 800);
+      }, 800);
+    }, 500);
   };
 
   const handleCancel = () => {
@@ -100,24 +159,26 @@ const PublishPage: React.FC = () => {
     });
   };
 
-  const typeMeta = helperTypeList.find(t => t.key === type)!;
-  const urgentMeta = urgentLevelList.find(u => u.key === urgentLevel)!;
+  const typeMeta = helperTypeList.find((t) => t.key === type)!;
+  const urgentMeta = urgentLevelList.find((u) => u.key === urgentLevel)!;
+
+  const selectedAddrText =
+    selectedAddrId && addresses.find((a) => a.id === selectedAddrId)
+      ? `${building}${unit}${room}${addressDetail ? ' · ' + addressDetail : ''}`
+      : '';
 
   return (
     <View className={styles.page}>
       <View className={styles.formCard}>
         <View className={styles.formTitle}>选择求助类型</View>
         <View className={styles.typeGrid}>
-          {helperTypeList.map(item => (
+          {helperTypeList.map((item) => (
             <View
               key={item.key}
               className={classnames(styles.typeCard, type === item.key && styles.active)}
               onClick={() => setType(item.key)}
             >
-              <View
-                className={styles.typeIcon}
-                style={{ background: item.bgColor }}
-              >
+              <View className={styles.typeIcon} style={{ background: item.bgColor }}>
                 <Text>
                   {item.key === 'express' && '📦'}
                   {item.key === 'care' && '👶'}
@@ -135,7 +196,7 @@ const PublishPage: React.FC = () => {
       <View className={styles.formCard}>
         <View className={styles.formTitle}>紧急程度</View>
         <View className={styles.urgentRow}>
-          {urgentLevelList.map(item => (
+          {urgentLevelList.map((item) => (
             <View
               key={item.key}
               className={classnames(styles.urgentCard, urgentLevel === item.key && styles.active)}
@@ -173,9 +234,8 @@ const PublishPage: React.FC = () => {
             <Input
               className={styles.input}
               placeholder='一句话描述你的需求'
-              placeholderClass={styles.input}
               value={title}
-              onInput={e => setTitle(e.detail.value.slice(0, 30))}
+              onInput={(e) => setTitle(e.detail.value.slice(0, 30))}
               maxlength={30}
             />
           </View>
@@ -189,7 +249,7 @@ const PublishPage: React.FC = () => {
               className={styles.textarea}
               placeholder='请详细描述你的需求，包括物品大小、注意事项等...'
               value={description}
-              onInput={e => setDescription(e.detail.value.slice(0, 500))}
+              onInput={(e) => setDescription(e.detail.value.slice(0, 500))}
               maxlength={500}
               autoHeight
             />
@@ -201,11 +261,7 @@ const PublishPage: React.FC = () => {
           <Text className={classnames(styles.label, styles.required)}>期望时间</Text>
           <View className={styles.dateRow}>
             <View className={styles.dateItem}>
-              <Picker
-                mode='date'
-                value={startDate}
-                onChange={e => setStartDate(e.detail.value)}
-              >
+              <Picker mode='date' value={startDate} onChange={(e) => setStartDate(e.detail.value)}>
                 <View className={styles.inputWrap}>
                   <Text style={{ color: startDate ? undefined : '$color-text-tertiary' }}>
                     {startDate || '开始日期'}
@@ -214,11 +270,7 @@ const PublishPage: React.FC = () => {
               </Picker>
             </View>
             <View className={styles.dateItem}>
-              <Picker
-                mode='time'
-                value={startTime}
-                onChange={e => setStartTime(e.detail.value)}
-              >
+              <Picker mode='time' value={startTime} onChange={(e) => setStartTime(e.detail.value)}>
                 <View className={styles.inputWrap}>
                   <Text>{startTime || '开始时间'}</Text>
                 </View>
@@ -228,22 +280,14 @@ const PublishPage: React.FC = () => {
           <View style={{ height: 16 }} />
           <View className={styles.dateRow}>
             <View className={styles.dateItem}>
-              <Picker
-                mode='date'
-                value={endDate}
-                onChange={e => setEndDate(e.detail.value)}
-              >
+              <Picker mode='date' value={endDate} onChange={(e) => setEndDate(e.detail.value)}>
                 <View className={styles.inputWrap}>
                   <Text>{endDate || '结束日期'}</Text>
                 </View>
               </Picker>
             </View>
             <View className={styles.dateItem}>
-              <Picker
-                mode='time'
-                value={endTime}
-                onChange={e => setEndTime(e.detail.value)}
-              >
+              <Picker mode='time' value={endTime} onChange={(e) => setEndTime(e.detail.value)}>
                 <View className={styles.inputWrap}>
                   <Text>{endTime || '结束时间'}</Text>
                 </View>
@@ -256,6 +300,22 @@ const PublishPage: React.FC = () => {
       <View className={styles.formCard}>
         <View className={styles.formTitle}>地址信息</View>
 
+        {addresses.length > 0 && (
+          <View className={styles.formItem}>
+            <Text className={styles.label}>选择已有地址</Text>
+            <View className={styles.addressCard} onClick={handleChooseAddress}>
+              <View className={styles.addressIcon}>📍</View>
+              <View className={styles.addressContent}>
+                <View className={styles.addressMain}>
+                  {selectedAddrText || '点击选择常用地址'}
+                </View>
+                <View className={styles.addressSub}>已保存 {addresses.length} 个地址</View>
+              </View>
+              <Text className={styles.addressArrow}>›</Text>
+            </View>
+          </View>
+        )}
+
         <View className={styles.formItem}>
           <Text className={classnames(styles.label, styles.required)}>楼栋/单元/室号</Text>
           <View className={styles.dateRow}>
@@ -265,7 +325,7 @@ const PublishPage: React.FC = () => {
                   className={styles.input}
                   placeholder='如：3栋'
                   value={building}
-                  onInput={e => setBuilding(e.detail.value)}
+                  onInput={(e) => setBuilding(e.detail.value)}
                 />
               </View>
             </View>
@@ -275,7 +335,7 @@ const PublishPage: React.FC = () => {
                   className={styles.input}
                   placeholder='如：2单元'
                   value={unit}
-                  onInput={e => setUnit(e.detail.value)}
+                  onInput={(e) => setUnit(e.detail.value)}
                 />
               </View>
             </View>
@@ -285,7 +345,7 @@ const PublishPage: React.FC = () => {
                   className={styles.input}
                   placeholder='室号'
                   value={room}
-                  onInput={e => setRoom(e.detail.value)}
+                  onInput={(e) => setRoom(e.detail.value)}
                 />
               </View>
             </View>
@@ -299,7 +359,7 @@ const PublishPage: React.FC = () => {
               className={styles.input}
               placeholder='如：门口有红色脚垫'
               value={addressDetail}
-              onInput={e => setAddressDetail(e.detail.value)}
+              onInput={(e) => setAddressDetail(e.detail.value)}
             />
           </View>
         </View>
@@ -311,7 +371,7 @@ const PublishPage: React.FC = () => {
         <View className={styles.formItem}>
           <Text className={classnames(styles.label, styles.required)}>酬谢类型</Text>
           <View className={styles.rewardRow}>
-            {rewardTypeList.map(item => (
+            {rewardTypeList.map((item) => (
               <View
                 key={item.key}
                 className={classnames(styles.rewardCard, rewardType === item.key && styles.active)}
@@ -329,13 +389,16 @@ const PublishPage: React.FC = () => {
             <Input
               className={styles.input}
               placeholder={
-                rewardType === 'money' ? '如：20元辛苦费' :
-                rewardType === 'gift' ? '如：一份小礼物' :
-                rewardType === 'exchange' ? '如：下次我帮你取快递' :
-                '如：邻里互助，感谢！'
+                rewardType === 'money'
+                  ? '如：20元辛苦费'
+                  : rewardType === 'gift'
+                  ? '如：一份小礼物'
+                  : rewardType === 'exchange'
+                  ? '如：下次我帮你取快递'
+                  : '如：邻里互助，感谢！'
               }
               value={rewardDetail}
-              onInput={e => setRewardDetail(e.detail.value)}
+              onInput={(e) => setRewardDetail(e.detail.value)}
             />
           </View>
         </View>

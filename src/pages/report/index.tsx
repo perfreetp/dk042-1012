@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Input, Textarea } from '@tarojs/components';
 import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import classnames from 'classnames';
+import { useAppStore } from '@/store';
 import styles from './index.module.scss';
 
 const reasonOptions = [
@@ -17,6 +18,8 @@ const reasonOptions = [
 
 const ReportPage: React.FC = () => {
   const router = useRouter();
+  const addReport = useAppStore((s) => s.addReport);
+  const currentUser = useAppStore((s) => s.currentUser);
   const [reportType, setReportType] = useState('');
   const [targetId, setTargetId] = useState('');
   const [reason, setReason] = useState('');
@@ -72,6 +75,17 @@ const ReportPage: React.FC = () => {
     Taro.showLoading({ title: '提交中...', mask: true });
     setTimeout(() => {
       Taro.hideLoading();
+
+      const reasonLabel = reasonOptions.find((o) => o.key === reason)?.label || reason;
+      addReport({
+        reporterId: currentUser.id,
+        targetId: targetId || 'target-' + Date.now(),
+        targetType: reportType === '求助内容' ? 'request' : 'user',
+        reason: reasonLabel,
+        detail: detail.trim() + (contact ? `\n\n联系方式：${contact}` : ''),
+        images: []
+      });
+
       Taro.showModal({
         title: '举报提交成功',
         content: '我们已收到您的举报，管理员将在24小时内进行核实处理。感谢您为社区和谐贡献力量！',

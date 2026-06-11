@@ -3,9 +3,9 @@ import { View, Text, Image, Input, Button, ScrollView } from '@tarojs/components
 import Taro, { useDidShow, useRouter } from '@tarojs/taro';
 import classnames from 'classnames';
 import EmptyState from '@/components/EmptyState';
-import { mockHelpers } from '@/data/helpers';
+import { useAppStore } from '@/store';
 import { currentUser } from '@/data/notices';
-import type { HelperRequest, HelperMessage } from '@/types';
+import type { HelperMessage } from '@/types';
 import {
   getHelperTypeMeta,
   getUrgentLevelMeta,
@@ -19,31 +19,53 @@ import styles from './index.module.scss';
 
 const DetailPage: React.FC = () => {
   const router = useRouter();
-  const id = router.params.id;
-  const [helper, setHelper] = useState<HelperRequest | undefined>(
-    mockHelpers.find(h => h.id === id)
-  );
+  const id = router.params.id as string;
+
+  const allHelpers = useAppStore((s) => s.helpers);
+  const addResponder = useAppStore((s) => s.addResponder);
+  const acceptResponder = useAppStore((s) => s.acceptResponder);
+  const startHelper = useAppStore((s) => s.startHelper);
+  const completeHelper = useAppStore((s) => s.completeHelper);
+  const cancelHelper = useAppStore((s) => s.cancelHelper);
+  const addMessage = useAppStore((s) => s.addMessage);
+
+  const helper = useMemo(() => allHelpers.find((h) => h.id === id), [allHelpers, id]);
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
 
   useDidShow(() => {
-    console.log('[Detail] page show, id:', id);
+    console.log('[Detail] page show, id:', id, 'found:', !!helper);
   });
 
   const isPublisher = helper?.publisherId === currentUser.id;
-  const isResponder = helper?.responders.some(r => r.id === currentUser.id);
+  const isResponder = helper?.responders.some((r) => r.id === currentUser.id);
 
-  const typeMeta = useMemo(() => helper ? getHelperTypeMeta(helper.type) : null, [helper]);
-  const urgentMeta = useMemo(() => helper ? getUrgentLevelMeta(helper.urgentLevel) : null, [helper]);
-  const statusMeta = useMemo(() => helper ? getHelperStatusMeta(helper.status) : null, [helper]);
+  const typeMeta = useMemo(() => (helper ? getHelperTypeMeta(helper.type) : null), [helper]);
+  const urgentMeta = useMemo(() => (helper ? getUrgentLevelMeta(helper.urgentLevel) : null), [helper]);
+  const statusMeta = useMemo(() => (helper ? getHelperStatusMeta(helper.status) : null), [helper]);
 
   const progressSteps = useMemo(() => {
     if (!helper) return [];
     const steps = [
       { key: 'created', title: '发布求助', desc: formatTime(helper.createdAt), done: true },
-      { key: 'accepted', title: '有人响应', desc: helper.responders.length > 0 ? `${helper.responders.length}位邻居愿意帮忙` : '等待邻居响应', done: helper.responders.length > 0 || ['accepted', 'in_progress', 'completed'].includes(helper.status) },
-      { key: 'progress', title: '互助进行中', desc: helper.acceptedUserId ? '已确认协助人' : '等待确认协助人', done: ['in_progress', 'completed'].includes(helper.status) },
-      { key: 'completed', title: '互助完成', desc: helper.completedAt ? formatTime(helper.completedAt) : '等待完成确认', done: helper.status === 'completed' }
+      {
+        key: 'accepted',
+        title: '有人响应',
+        desc: helper.responders.length > 0 ? `${helper.responders.length}位邻居愿意帮忙` : '等待邻居响应',
+        done: helper.responders.length > 0 || ['accepted', 'in_progress', 'completed'].includes(helper.status)
+      },
+      {
+        key: 'progress',
+        title: '互助进行中',
+        desc: helper.acceptedUserId ? '已确认协助人' : '等待确认协助人',
+        done: ['in_progress', 'completed'].includes(helper.status)
+      },
+      {
+        key: 'completed',
+        title: '互助完成',
+        desc: helper.completedAt ? formatTime(helper.completedAt) : '等待完成确认',
+        done: helper.status === 'completed'
+      }
     ];
     if (helper.status === 'cancelled') {
       return [
@@ -80,11 +102,7 @@ const DetailPage: React.FC = () => {
       content: `确定要帮${helper.publisher.name}完成"${helper.title}"吗？`,
       success: (res) => {
         if (res.confirm) {
-          setHelper({
-            ...helper,
-            responders: [...helper.responders, currentUser],
-            updatedAt: new Date().toISOString()
-          });
+          addResponder(helper.id, currentUser);
           Taro.showToast({ title: '报名成功！', icon: 'success' });
         }
       }
@@ -97,12 +115,7 @@ const DetailPage: React.FC = () => {
       content: '确定选择这位邻居帮你完成求助吗？',
       success: (res) => {
         if (res.confirm) {
-          setHelper({
-            ...helper,
-            status: 'accepted',
-            acceptedUserId: userId,
-            updatedAt: new Date().toISOString()
-          });
+          acceptResponder(helper.id, userId);
           Taro.showToast({ title: '已确认协助人', icon: 'success' });
         }
       }
@@ -110,11 +123,7 @@ const DetailPage: React.FC = () => {
   };
 
   const handleStart = () => {
-    setHelper({
-      ...helper,
-      status: 'in_progress',
-      updatedAt: new Date().toISOString()
-    });
+    startHelper(helper.id);
     Taro.showToast({ title: '已开始互助', icon: 'success' });
   };
 
@@ -125,12 +134,7 @@ const DetailPage: React.FC = () => {
       confirmText: '确认完成',
       success: (res) => {
         if (res.confirm) {
-          setHelper({
-            ...helper,
-            status: 'completed',
-            completedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          });
+          completeHelper(helper.id);
           Taro.showToast({ title: '互助已完成！', icon: 'success' });
         }
       }
@@ -148,12 +152,7 @@ const DetailPage: React.FC = () => {
           content: `确定要取消求助吗？取消原因：${reason}`,
           success: (modalRes) => {
             if (modalRes.confirm) {
-              setHelper({
-                ...helper,
-                status: 'cancelled',
-                cancelReason: reason,
-                updatedAt: new Date().toISOString()
-              });
+              cancelHelper(helper.id, reason);
               Taro.showToast({ title: '已取消', icon: 'success' });
             }
           }
@@ -169,9 +168,7 @@ const DetailPage: React.FC = () => {
       confirmText: '拨打虚拟号',
       success: (res) => {
         if (res.confirm) {
-          Taro.makePhoneCall({
-            phoneNumber: '17012341234'
-          }).catch(() => {
+          Taro.makePhoneCall({ phoneNumber: '17012341234' }).catch(() => {
             Taro.showToast({ title: '已生成虚拟号', icon: 'none' });
           });
         }
@@ -200,14 +197,10 @@ const DetailPage: React.FC = () => {
       createdAt: new Date().toISOString()
     };
     setTimeout(() => {
-      setHelper({
-        ...helper,
-        messages: [...helper.messages, newMsg],
-        updatedAt: new Date().toISOString()
-      });
+      addMessage(helper.id, newMsg);
       setMessageText('');
       setSending(false);
-    }, 300);
+    }, 200);
   };
 
   return (
@@ -235,7 +228,10 @@ const DetailPage: React.FC = () => {
         <View className={styles.infoGrid}>
           <View className={styles.infoItem}>
             <Text className={styles.infoLabel}>📍 地址</Text>
-            <Text className={styles.infoValue}>{helper.building}{helper.unit} {helper.addressDetail}</Text>
+            <Text className={styles.infoValue}>
+              {helper.building}
+              {helper.unit} {helper.addressDetail}
+            </Text>
           </View>
           <View className={styles.infoItem}>
             <Text className={styles.infoLabel}>🚶 距离</Text>
@@ -251,7 +247,9 @@ const DetailPage: React.FC = () => {
           </View>
           <View className={styles.infoItem}>
             <Text className={styles.infoLabel}>👥 可响应</Text>
-            <Text className={styles.infoValue}>{helper.responders.length}/{helper.maxResponders}人</Text>
+            <Text className={styles.infoValue}>
+              {helper.responders.length}/{helper.maxResponders}人
+            </Text>
           </View>
           <View className={styles.infoItem}>
             <Text className={styles.infoLabel}>📅 发布</Text>
@@ -278,7 +276,7 @@ const DetailPage: React.FC = () => {
       <View className={styles.card}>
         <View className={styles.cardTitle}>互助进度</View>
         <View className={styles.progressTimeline}>
-          {progressSteps.map(step => (
+          {progressSteps.map((step) => (
             <View key={step.key} className={styles.timelineItem}>
               <View className={classnames(styles.timelineDot, step.done ? styles.done : styles.pending)} />
               <View className={styles.timelineContent}>
@@ -297,7 +295,10 @@ const DetailPage: React.FC = () => {
           <View className={styles.publisherInfo}>
             <View className={styles.publisherName}>{helper.publisher.name}</View>
             <View className={styles.publisherMeta}>
-              <Text>{helper.publisher.building}{helper.publisher.unit}</Text>
+              <Text>
+                {helper.publisher.building}
+                {helper.publisher.unit}
+              </Text>
               <View className={styles.creditBadge}>⭐ {helper.publisher.creditScore}分</View>
               <Text>已帮{helper.publisher.helpedCount}次</Text>
             </View>
@@ -314,13 +315,14 @@ const DetailPage: React.FC = () => {
         <View className={styles.cardTitle}>响应邻居 ({helper.responders.length})</View>
         {helper.responders.length > 0 ? (
           <View className={styles.responderList}>
-            {helper.responders.map(r => (
+            {helper.responders.map((r) => (
               <View key={r.id} className={styles.responderItem}>
                 <Image className={styles.respAvatar} src={r.avatar} mode='aspectFill' />
                 <View className={styles.respInfo}>
                   <View className={styles.respName}>{r.name}</View>
                   <View className={styles.respMeta}>
-                    {r.building}{r.unit} · ⭐{r.creditScore}分 · 已帮{r.helpedCount}次
+                    {r.building}
+                    {r.unit} · ⭐{r.creditScore}分 · 已帮{r.helpedCount}次
                   </View>
                 </View>
                 {helper.acceptedUserId === r.id ? (
@@ -330,11 +332,14 @@ const DetailPage: React.FC = () => {
                     确认TA
                   </Button>
                 ) : null}
-                {!isPublisher && r.id !== currentUser.id && helper.status !== 'cancelled' && helper.status !== 'completed' && (
-                  <Button className={styles.contactBtn} style={{ height: 56, fontSize: 22 }} onClick={handleContact}>
-                    联系
-                  </Button>
-                )}
+                {!isPublisher &&
+                  r.id !== currentUser.id &&
+                  helper.status !== 'cancelled' &&
+                  helper.status !== 'completed' && (
+                    <Button className={styles.contactBtn} style={{ height: 56, fontSize: 22 }} onClick={handleContact}>
+                      联系
+                    </Button>
+                  )}
               </View>
             ))}
           </View>
@@ -350,22 +355,26 @@ const DetailPage: React.FC = () => {
       <View className={styles.card}>
         <View className={styles.cardTitle}>留言交流 ({helper.messages.length})</View>
         <View className={styles.messageList}>
-          {helper.messages.length > 0 ? helper.messages.map(msg => (
-            msg.isSystem ? (
-              <View key={msg.id} className={styles.systemMsg}>{msg.content}</View>
-            ) : (
-              <View key={msg.id} className={styles.messageItem}>
-                <Image className={styles.msgAvatar} src={msg.userAvatar} mode='aspectFill' />
-                <View className={styles.msgContent}>
-                  <View className={styles.msgHeader}>
-                    <Text className={styles.msgName}>{msg.userName}</Text>
-                    <Text className={styles.msgTime}>{formatTime(msg.createdAt)}</Text>
-                  </View>
-                  <View className={styles.msgText}>{msg.content}</View>
+          {helper.messages.length > 0 ? (
+            helper.messages.map((msg) =>
+              msg.isSystem ? (
+                <View key={msg.id} className={styles.systemMsg}>
+                  {msg.content}
                 </View>
-              </View>
+              ) : (
+                <View key={msg.id} className={styles.messageItem}>
+                  <Image className={styles.msgAvatar} src={msg.userAvatar} mode='aspectFill' />
+                  <View className={styles.msgContent}>
+                    <View className={styles.msgHeader}>
+                      <Text className={styles.msgName}>{msg.userName}</Text>
+                      <Text className={styles.msgTime}>{formatTime(msg.createdAt)}</Text>
+                    </View>
+                    <View className={styles.msgText}>{msg.content}</View>
+                  </View>
+                </View>
+              )
             )
-          )) : (
+          ) : (
             <EmptyState emoji='💬' title='还没有留言' text='留言和邻居沟通一下吧' />
           )}
         </View>
@@ -375,7 +384,7 @@ const DetailPage: React.FC = () => {
               className={styles.msgInput}
               placeholder='说点什么...'
               value={messageText}
-              onInput={e => setMessageText(e.detail.value)}
+              onInput={(e) => setMessageText(e.detail.value)}
               confirmType='send'
               onConfirm={handleSendMessage}
               maxlength={200}
@@ -415,10 +424,7 @@ const DetailPage: React.FC = () => {
               </Button>
             )}
             {helper.status === 'in_progress' && (
-              <Button
-                className={classnames(styles.btnPrimary, styles.success)}
-                onClick={handleComplete}
-              >
+              <Button className={classnames(styles.btnPrimary, styles.success)} onClick={handleComplete}>
                 ✓ 确认完成
               </Button>
             )}
@@ -443,22 +449,20 @@ const DetailPage: React.FC = () => {
                 {helper.responders.length >= helper.maxResponders ? '人数已满' : '🙋 我要帮忙'}
               </Button>
             )}
-            {isResponder && helper.status === 'accepted' && helper.acceptedUserId === currentUser.id && (
-              <Button
-                className={classnames(styles.btnPrimary, styles.success)}
-                onClick={handleStart}
-              >
-                我已就位，开始！
-              </Button>
-            )}
-            {isResponder && helper.acceptedUserId === currentUser.id && helper.status === 'in_progress' && (
-              <Button
-                className={classnames(styles.btnPrimary, styles.success)}
-                onClick={handleComplete}
-              >
-                ✓ 我已完成
-              </Button>
-            )}
+            {isResponder &&
+              helper.status === 'accepted' &&
+              helper.acceptedUserId === currentUser.id && (
+                <Button className={classnames(styles.btnPrimary, styles.success)} onClick={handleStart}>
+                  我已就位，开始！
+                </Button>
+              )}
+            {isResponder &&
+              helper.acceptedUserId === currentUser.id &&
+              helper.status === 'in_progress' && (
+                <Button className={classnames(styles.btnPrimary, styles.success)} onClick={handleComplete}>
+                  ✓ 我已完成
+                </Button>
+              )}
             {isResponder && helper.acceptedUserId !== currentUser.id && (
               <Button
                 className={classnames(styles.btnPrimary, styles.disabled)}

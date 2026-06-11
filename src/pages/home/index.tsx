@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Input, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import classnames from 'classnames';
 import HelperCard from '@/components/HelperCard';
 import SectionHeader from '@/components/SectionHeader';
 import EmptyState from '@/components/EmptyState';
-import { mockHelpers } from '@/data/helpers';
 import { mockNotices, currentUser } from '@/data/notices';
-import type { HelperRequest, HelperType } from '@/types';
+import { useAppStore } from '@/store';
+import type { HelperType } from '@/types';
 import { helperTypeList, urgentLevelList } from '@/utils';
 import styles from './index.module.scss';
 
@@ -15,23 +15,22 @@ type FilterType = 'all' | HelperType;
 type FilterUrgent = 'all' | 'high' | 'medium' | 'low';
 
 const HomePage: React.FC = () => {
-  const [helpers, setHelpers] = useState<HelperRequest[]>(mockHelpers);
+  const helpers = useAppStore((s) => s.helpers);
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');
   const [urgentFilter, setUrgentFilter] = useState<FilterUrgent>('all');
   const [refreshing, setRefreshing] = useState(false);
 
   useDidShow(() => {
-    console.log('[Home] page show');
+    console.log('[Home] page show, helpers count:', helpers.length);
   });
 
   usePullDownRefresh(() => {
-    console.log('[Home] pull down refresh');
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
       Taro.stopPullDownRefresh();
       Taro.showToast({ title: '刷新成功', icon: 'success' });
-    }, 1000);
+    }, 600);
   });
 
   const topNotice = mockNotices.find(n => n.isTop) || mockNotices[0];

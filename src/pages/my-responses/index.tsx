@@ -4,9 +4,9 @@ import Taro, { usePullDownRefresh, useDidShow } from '@tarojs/taro';
 import classnames from 'classnames';
 import HelperCard from '@/components/HelperCard';
 import EmptyState from '@/components/EmptyState';
-import { mockHelpers } from '@/data/helpers';
+import { useAppStore } from '@/store';
 import { currentUser } from '@/data/notices';
-import type { HelperRequest, HelperStatus } from '@/types';
+import type { HelperStatus } from '@/types';
 import styles from './index.module.scss';
 
 type TabType = 'all' | 'accepted' | 'in_progress' | 'completed' | 'rejected';
@@ -21,28 +21,25 @@ const tabList: { key: TabType; label: string }[] = [
 
 const MyResponsesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('all');
-  const [helpers, setHelpers] = useState<HelperRequest[]>([]);
+  const allHelpers = useAppStore((s) => s.helpers);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadData = () => {
-    const myResponses = mockHelpers.filter(h =>
-      h.responders.some(r => r.id === currentUser.id)
-    );
-    setHelpers(myResponses);
-  };
+  const helpers = useMemo(
+    () => allHelpers.filter((h) => h.responders.some((r) => r.id === currentUser.id)),
+    [allHelpers]
+  );
 
   useDidShow(() => {
-    loadData();
+    console.log('[MyResponses] show, total:', helpers.length);
   });
 
   usePullDownRefresh(() => {
     setRefreshing(true);
     setTimeout(() => {
-      loadData();
       setRefreshing(false);
       Taro.stopPullDownRefresh();
       Taro.showToast({ title: '刷新成功', icon: 'success' });
-    }, 800);
+    }, 500);
   });
 
   const filteredHelpers = useMemo(() => {
@@ -71,10 +68,9 @@ const MyResponsesPage: React.FC = () => {
   const handleRefresh = () => {
     setRefreshing(true);
     setTimeout(() => {
-      loadData();
       setRefreshing(false);
       Taro.showToast({ title: '刷新成功', icon: 'success' });
-    }, 800);
+    }, 500);
   };
 
   const handleGoHome = () => {
