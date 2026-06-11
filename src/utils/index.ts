@@ -16,6 +16,7 @@ export const urgentLevelList: { key: UrgentLevel; label: string; color: string; 
 ];
 
 export const helperStatusList: { key: HelperStatus; label: string; color: string; bgColor: string }[] = [
+  { key: 'pending_review', label: '待审核', color: '#FFAB00', bgColor: '#FFF8E1' },
   { key: 'pending', label: '待响应', color: '#FF7A45', bgColor: '#FFF2EC' },
   { key: 'accepted', label: '已接单', color: '#4C9AFF', bgColor: '#E8F3FF' },
   { key: 'in_progress', label: '进行中', color: '#722ED1', bgColor: '#F3E8FF' },

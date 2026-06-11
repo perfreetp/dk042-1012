@@ -117,7 +117,7 @@ const PublishPage: React.FC = () => {
       title: title.trim(),
       description: description.trim(),
       urgentLevel,
-      status: 'pending' as const,
+      status: 'pending_review' as const,
       publisherId: currentUser.id,
       publisher: currentUser,
       building,
@@ -140,7 +140,7 @@ const PublishPage: React.FC = () => {
 
     setTimeout(() => {
       setSubmitting(false);
-      Taro.showToast({ title: '发布成功！', icon: 'success' });
+      Taro.showToast({ title: '已提交，等待审核', icon: 'success' });
       setTimeout(() => {
         Taro.switchTab({ url: '/pages/home/index' });
       }, 800);

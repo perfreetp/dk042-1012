@@ -22,12 +22,15 @@ const SearchPage: React.FC = () => {
   const results = useMemo(() => {
     if (!keyword.trim()) return [];
     const kw = keyword.trim().toLowerCase();
-    return helpers.filter(h =>
-      h.title.toLowerCase().includes(kw) ||
-      h.description.toLowerCase().includes(kw) ||
-      h.building.includes(kw) ||
-      h.type.toLowerCase().includes(kw)
-    );
+    return helpers.filter(h => {
+      if (h.status === 'pending_review' || h.status === 'cancelled') return false;
+      return (
+        h.title.toLowerCase().includes(kw) ||
+        h.description.toLowerCase().includes(kw) ||
+        h.building.includes(kw) ||
+        h.type.toLowerCase().includes(kw)
+      );
+    });
   }, [keyword, helpers]);
 
   const handleSearch = () => {

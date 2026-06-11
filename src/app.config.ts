@@ -14,7 +14,8 @@ export default defineAppConfig({
     'pages/thanks-detail/index',
     'pages/notice-detail/index',
     'pages/report/index',
-    'pages/admin/index'
+    'pages/admin/index',
+    'pages/report-list/index'
   ],
   window: {
     backgroundTextStyle: 'light',

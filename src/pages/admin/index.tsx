@@ -18,7 +18,7 @@ const AdminPage: React.FC = () => {
   const processReport = useAppStore((s) => s.processReport);
 
   const pendingHelpers = useMemo(
-    () => helpers.filter((h) => h.status === 'pending'),
+    () => helpers.filter((h) => h.status === 'pending_review'),
     [helpers]
   );
 

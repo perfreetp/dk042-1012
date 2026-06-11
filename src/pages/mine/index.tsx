@@ -1,27 +1,64 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
-import { currentUser } from '@/data/notices';
-import { mockHelpers } from '@/data/helpers';
+import { useAppStore } from '@/store';
 import { formatTime, getHelperStatusMeta } from '@/utils';
 import styles from './index.module.scss';
 
 const MinePage: React.FC = () => {
+  const helpers = useAppStore((s) => s.helpers);
+  const currentUser = useAppStore((s) => s.currentUser);
+
   const user = currentUser;
-  const [activeCount] = useState(
-    mockHelpers.filter(h => h.publisherId === user.id && ['pending', 'accepted', 'in_progress'].includes(h.status)).length
+
+  const activeCount = useMemo(
+    () =>
+      helpers.filter(
+        (h) =>
+          h.publisherId === user.id &&
+          ['pending_review', 'pending', 'accepted', 'in_progress'].includes(h.status)
+      ).length,
+    [helpers, user.id]
   );
-  const [respondCount] = useState(
-    mockHelpers.filter(h => h.responders.some(r => r.id === user.id) && ['pending', 'accepted', 'in_progress'].includes(h.status)).length
+
+  const respondCount = useMemo(
+    () =>
+      helpers.filter(
+        (h) =>
+          h.responders.some((r) => r.id === user.id) &&
+          ['pending', 'accepted', 'in_progress'].includes(h.status)
+      ).length,
+    [helpers, user.id]
+  );
+
+  const publishedCount = useMemo(
+    () => helpers.filter((h) => h.publisherId === user.id).length,
+    [helpers, user.id]
+  );
+
+  const helpedCount = useMemo(
+    () =>
+      helpers.filter(
+        (h) => h.responders.some((r) => r.id === user.id) && h.status === 'completed'
+      ).length,
+    [helpers, user.id]
+  );
+
+  const myActiveRequests = useMemo(
+    () =>
+      helpers
+        .filter(
+          (h) =>
+            h.publisherId === user.id &&
+            ['pending_review', 'pending', 'accepted', 'in_progress'].includes(h.status)
+        )
+        .slice(0, 3),
+    [helpers, user.id]
   );
 
   useDidShow(() => {
-    console.log('[Mine] page show');
+    console.log('[Mine] page show, published:', publishedCount, 'helped:', helpedCount);
   });
-
-  const myActiveRequests = mockHelpers
-    .filter(h => h.publisherId === user.id && ['pending', 'accepted', 'in_progress'].includes(h.status))
-    .slice(0, 3);
 
   const handleMyRequests = () => {
     Taro.navigateTo({ url: '/pages/my-requests/index' });
@@ -44,7 +81,7 @@ const MinePage: React.FC = () => {
   };
 
   const handleReport = () => {
-    Taro.navigateTo({ url: '/pages/report/index' });
+    Taro.navigateTo({ url: '/pages/report-list/index' });
   };
 
   const handleLogout = () => {
@@ -71,7 +108,10 @@ const MinePage: React.FC = () => {
           <View className={styles.userInfo}>
             <View className={styles.nameRow}>
               <Text className={styles.name}>{user.name}</Text>
-              <Text className={styles.building}>{user.building}{user.unit}</Text>
+              <Text className={styles.building}>
+                {user.building}
+                {user.unit}
+              </Text>
             </View>
             <View className={styles.phone}>{user.phone}</View>
             <View className={styles.creditRow}>
@@ -84,11 +124,11 @@ const MinePage: React.FC = () => {
 
       <View className={styles.statsCard}>
         <View className={styles.statItem}>
-          <Text className={styles.statNum}>{user.helpCount}</Text>
+          <Text className={styles.statNum}>{publishedCount}</Text>
           <Text className={styles.statLabel}>发布求助</Text>
         </View>
         <View className={styles.statItem}>
-          <Text className={styles.statNum}>{user.helpedCount}</Text>
+          <Text className={styles.statNum}>{helpedCount}</Text>
           <Text className={styles.statLabel}>帮助他人</Text>
         </View>
         <View className={styles.statItem}>
@@ -102,7 +142,7 @@ const MinePage: React.FC = () => {
           <View>
             <View className={styles.sectionTitle}>求助进度提醒</View>
             <View className={styles.progressList}>
-              {myActiveRequests.map(h => {
+              {myActiveRequests.map((h) => {
                 const statusMeta = getHelperStatusMeta(h.status);
                 return (
                   <View

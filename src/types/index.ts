@@ -1,6 +1,6 @@
 export type HelperType = 'express' | 'care' | 'move' | 'tool' | 'run';
 export type UrgentLevel = 'high' | 'medium' | 'low';
-export type HelperStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
+export type HelperStatus = 'pending_review' | 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
 export type RewardType = 'free' | 'money' | 'gift' | 'exchange';
 
 export interface HelperTypeMeta {

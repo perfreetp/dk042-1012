@@ -14,10 +14,12 @@ type TabType = 'all' | HelperStatus;
 
 const tabList: { key: TabType; label: string }[] = [
   { key: 'all', label: '全部' },
+  { key: 'pending_review', label: '待审核' },
   { key: 'pending', label: '待响应' },
   { key: 'accepted', label: '已接单' },
   { key: 'in_progress', label: '进行中' },
-  { key: 'completed', label: '已完成' }
+  { key: 'completed', label: '已完成' },
+  { key: 'cancelled', label: '已取消' }
 ];
 
 const MyRequestsPage: React.FC = () => {

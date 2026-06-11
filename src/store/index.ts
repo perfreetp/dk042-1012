@@ -128,10 +128,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       )
     })),
 
-  approveHelper: (helperId) =>
+  approveHelper: (helperId: string) =>
     set((state) => ({
       helpers: state.helpers.map((h) =>
-        h.id === helperId ? { ...h, updatedAt: new Date().toISOString() } : h
+        h.id === helperId
+          ? { ...h, status: 'pending', updatedAt: new Date().toISOString() }
+          : h
       )
     })),
 

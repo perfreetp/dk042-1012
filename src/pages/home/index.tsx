@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, Input, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import classnames from 'classnames';
@@ -37,6 +37,7 @@ const HomePage: React.FC = () => {
 
   const filteredHelpers = useMemo(() => {
     return helpers.filter(h => {
+      if (h.status === 'pending_review' || h.status === 'cancelled') return false;
       if (typeFilter !== 'all' && h.type !== typeFilter) return false;
       if (urgentFilter !== 'all' && h.urgentLevel !== urgentFilter) return false;
       return true;
