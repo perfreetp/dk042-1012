@@ -44,14 +44,6 @@ const ReportListPage: React.FC = () => {
     }
   };
 
-  const getResultNote = (detail: string) => {
-    const idx = detail.indexOf('\n\n处理备注：');
-    if (idx > -1) {
-      return detail.slice(idx + 8);
-    }
-    return null;
-  };
-
   const handleGoReport = () => {
     Taro.navigateTo({ url: '/pages/report/index' });
   };
@@ -74,7 +66,6 @@ const ReportListPage: React.FC = () => {
         {filteredReports.length > 0 ? (
           filteredReports.map((r) => {
             const statusInfo = getStatusInfo(r.status);
-            const resultNote = getResultNote(r.detail);
             return (
               <View key={r.id} className={styles.card}>
                 <View className={styles.cardHeader}>
@@ -85,42 +76,54 @@ const ReportListPage: React.FC = () => {
                     {statusInfo.label}
                   </View>
                 </View>
+
                 <View className={styles.metaRow}>
                   <Text className={styles.metaItem}>
                     <Text className={styles.metaLabel}>举报原因：</Text>
                     {r.reason}
                   </Text>
                 </View>
+
                 <View className={styles.metaRow}>
                   <Text className={styles.metaItem}>
                     <Text className={styles.metaLabel}>举报时间：</Text>
                     {formatTime(r.createdAt)}
                   </Text>
                 </View>
+
+                <View className={styles.sectionLabel}>原始举报内容</View>
                 <View className={styles.desc}>{r.detail}</View>
-                {resultNote && r.status !== 'pending' && (
-                  <View className={styles.resultBox}>
+
+                {r.status !== 'pending' && (
+                  <View
+                    className={[
+                      styles.resultBox,
+                      r.status === 'processed' ? styles.resultProcessed : styles.resultRejected
+                    ].join(' ')}
+                  >
                     <Text className={styles.resultLabel}>
-                      {r.status === 'processed' ? '✅ 处理结果' : 'ℹ️ 驳回说明'}
+                      {r.status === 'processed' ? '✅ 管理员处理结果' : 'ℹ️ 管理员驳回说明'}
                     </Text>
-                    <Text className={styles.resultText}>{resultNote}</Text>
+                    <Text className={styles.resultText}>
+                      {r.handleNote || (r.status === 'processed' ? '已按社区规则进行相应处置' : '经核查举报内容不属实或证据不足')}
+                    </Text>
                   </View>
                 )}
               </View>
             );
           })
         ) : (
-            <View className={styles.emptyWrap}>
-              <EmptyState
-                emoji='📋'
-                title={activeTab === 'all' ? '暂无举报记录' : '该状态下暂无记录'}
-                text={activeTab === 'all' ? '发现违规行为可以随时举报~' : '切换其他状态看看'}
-                showBtn={activeTab === 'all'}
-                btnText='去举报'
-                onBtnClick={handleGoReport}
-              />
-            </View>
-          )}
+          <View className={styles.emptyWrap}>
+            <EmptyState
+              emoji='📋'
+              title={activeTab === 'all' ? '暂无举报记录' : '该状态下暂无记录'}
+              text={activeTab === 'all' ? '发现违规行为可以随时举报~' : '切换其他状态看看'}
+              showBtn={activeTab === 'all'}
+              btnText='去举报'
+              onBtnClick={handleGoReport}
+            />
+          </View>
+        )}
       </ScrollView>
     </View>
   );

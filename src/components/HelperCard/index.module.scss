@@ -150,3 +150,23 @@
   font-size: $font-size-xs;
   color: $color-text-tertiary;
 }
+
+.cancelReasonBox {
+  background: #FFE8E8;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: $spacing-md;
+}
+
+.cancelReasonLabel {
+  font-size: $font-size-xs;
+  color: #F53F3F;
+  font-weight: $font-weight-medium;
+  margin-bottom: 8rpx;
+}
+
+.cancelReasonText {
+  font-size: $font-size-sm;
+  color: #B33A3A;
+  line-height: 1.4;
+}

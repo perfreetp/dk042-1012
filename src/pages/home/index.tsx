@@ -7,17 +7,19 @@ import SectionHeader from '@/components/SectionHeader';
 import EmptyState from '@/components/EmptyState';
 import { mockNotices, currentUser } from '@/data/notices';
 import { useAppStore } from '@/store';
-import type { HelperType } from '@/types';
+import type { HelperType, HelperRequest } from '@/types';
 import { helperTypeList, urgentLevelList } from '@/utils';
 import styles from './index.module.scss';
 
 type FilterType = 'all' | HelperType;
 type FilterUrgent = 'all' | 'high' | 'medium' | 'low';
+type FilterScope = 'public' | 'cancelled';
 
 const HomePage: React.FC = () => {
   const helpers = useAppStore((s) => s.helpers);
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');
   const [urgentFilter, setUrgentFilter] = useState<FilterUrgent>('all');
+  const [scopeFilter, setScopeFilter] = useState<FilterScope>('public');
   const [refreshing, setRefreshing] = useState(false);
 
   useDidShow(() => {
@@ -33,16 +35,30 @@ const HomePage: React.FC = () => {
     }, 600);
   });
 
-  const topNotice = mockNotices.find(n => n.isTop) || mockNotices[0];
+  const topNotice = mockNotices.find((n) => n.isTop) || mockNotices[0];
+
+  const myPendingReview = useMemo(
+    () => helpers.filter((h) => h.publisherId === currentUser.id && h.status === 'pending_review'),
+    [helpers]
+  );
+
+  const myCancelled = useMemo(
+    () => helpers.filter((h) => h.publisherId === currentUser.id && h.status === 'cancelled'),
+    [helpers]
+  );
 
   const filteredHelpers = useMemo(() => {
-    return helpers.filter(h => {
-      if (h.status === 'pending_review' || h.status === 'cancelled') return false;
+    return helpers.filter((h) => {
+      if (scopeFilter === 'public') {
+        if (h.status === 'pending_review' || h.status === 'cancelled') return false;
+      } else {
+        if (h.status !== 'cancelled') return false;
+      }
       if (typeFilter !== 'all' && h.type !== typeFilter) return false;
       if (urgentFilter !== 'all' && h.urgentLevel !== urgentFilter) return false;
       return true;
     });
-  }, [helpers, typeFilter, urgentFilter]);
+  }, [helpers, typeFilter, urgentFilter, scopeFilter]);
 
   const handleSearch = () => {
     Taro.navigateTo({ url: '/pages/search/index' });
@@ -54,10 +70,19 @@ const HomePage: React.FC = () => {
 
   const handleQuickType = (type: HelperType) => {
     setTypeFilter(type);
+    setScopeFilter('public');
   };
 
   const handleGoPublish = () => {
     Taro.switchTab({ url: '/pages/publish/index' });
+  };
+
+  const handleGoDetail = (id: string) => {
+    Taro.navigateTo({ url: `/pages/detail/index?id=${id}` });
+  };
+
+  const handleGoMyRequests = () => {
+    Taro.navigateTo({ url: '/pages/my-requests/index' });
   };
 
   return (
@@ -87,6 +112,62 @@ const HomePage: React.FC = () => {
       </View>
 
       <View className={styles.content}>
+        {myPendingReview.length > 0 && (
+          <View className={styles.pendingReviewCard}>
+            <View className={styles.pendingReviewHeader}>
+              <View className={styles.pendingReviewTitle}>
+                ⏳ 我的待审核求助
+                <View className={styles.pendingReviewBadge}>{myPendingReview.length}</View>
+              </View>
+              <Text
+                style={{ fontSize: 22, color: '#B8860B' }}
+                onClick={handleGoMyRequests}
+              >
+                查看全部 ›
+              </Text>
+            </View>
+            {myPendingReview.slice(0, 3).map((h: HelperRequest) => (
+              <View
+                key={h.id}
+                className={styles.pendingReviewItem}
+                onClick={() => handleGoDetail(h.id)}
+              >
+                <Text className={styles.pendingReviewItemTitle}>{h.title}</Text>
+                <Text className={styles.pendingReviewItemArrow}>查看 ›</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {myCancelled.length > 0 && (
+          <View className={styles.cancelledCard}>
+            <View className={styles.cancelledHeader}>
+              <View className={styles.cancelledTitle}>
+                ❌ 我的已取消求助
+                <View className={styles.cancelledBadge}>{myCancelled.length}</View>
+              </View>
+              <Text
+                style={{ fontSize: 22, color: '#B33A3A' }}
+                onClick={handleGoMyRequests}
+              >
+                查看全部 ›
+              </Text>
+            </View>
+            {myCancelled.slice(0, 2).map((h: HelperRequest) => (
+              <View
+                key={h.id}
+                className={styles.cancelledItem}
+                onClick={() => handleGoDetail(h.id)}
+              >
+                <Text className={styles.cancelledItemTitle}>{h.title}</Text>
+                {h.cancelReason && (
+                  <Text className={styles.cancelledItemReason}>{h.cancelReason}</Text>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
         <View className={styles.noticeCard} onClick={handleNoticeClick}>
           <View className={styles.noticeLabel}>公告</View>
           <View className={styles.noticeContent}>{topNotice.title}</View>
@@ -94,16 +175,13 @@ const HomePage: React.FC = () => {
         </View>
 
         <View className={styles.quickType}>
-          {helperTypeList.map(item => (
+          {helperTypeList.map((item) => (
             <View
               key={item.key}
               className={styles.quickTypeItem}
               onClick={() => handleQuickType(item.key)}
             >
-              <View
-                className={styles.quickTypeIcon}
-                style={{ background: item.bgColor }}
-              >
+              <View className={styles.quickTypeIcon} style={{ background: item.bgColor }}>
                 <Text>
                   {item.key === 'express' && '📦'}
                   {item.key === 'care' && '👶'}
@@ -117,7 +195,25 @@ const HomePage: React.FC = () => {
           ))}
         </View>
 
-        <SectionHeader title='求助列表' subtitle={`${filteredHelpers.length}条`} />
+        <SectionHeader
+          title={scopeFilter === 'public' ? '求助列表' : '已取消专区'}
+          subtitle={`${filteredHelpers.length}条`}
+        />
+
+        <View className={styles.filterBar}>
+          <View
+            className={classnames(styles.filterItem, scopeFilter === 'public' && styles.active)}
+            onClick={() => setScopeFilter('public')}
+          >
+            公开广场
+          </View>
+          <View
+            className={classnames(styles.filterItem, scopeFilter === 'cancelled' && styles.active)}
+            onClick={() => setScopeFilter('cancelled')}
+          >
+            已取消专区
+          </View>
+        </View>
 
         <View className={styles.filterBar}>
           <View
@@ -126,7 +222,7 @@ const HomePage: React.FC = () => {
           >
             全部类型
           </View>
-          {helperTypeList.map(t => (
+          {helperTypeList.map((t) => (
             <View
               key={t.key}
               className={classnames(styles.filterItem, typeFilter === t.key && styles.active)}
@@ -144,7 +240,7 @@ const HomePage: React.FC = () => {
           >
             全部紧急度
           </View>
-          {urgentLevelList.map(u => (
+          {urgentLevelList.map((u) => (
             <View
               key={u.key}
               className={classnames(styles.filterItem, urgentFilter === u.key && styles.active)}
@@ -157,15 +253,17 @@ const HomePage: React.FC = () => {
 
         <View className={styles.listContainer}>
           {filteredHelpers.length > 0 ? (
-            filteredHelpers.map(h => (
-              <HelperCard key={h.id} data={h} />
-            ))
+            filteredHelpers.map((h) => <HelperCard key={h.id} data={h} />)
           ) : (
             <EmptyState
-              emoji='🤝'
-              title='暂无匹配的求助'
-              text='换个筛选条件看看，或者主动发布一条求助吧'
-              showBtn
+              emoji={scopeFilter === 'cancelled' ? '🗑️' : '🤝'}
+              title={scopeFilter === 'cancelled' ? '暂无已取消的求助' : '暂无匹配的求助'}
+              text={
+                scopeFilter === 'cancelled'
+                  ? '被管理员驳回或主动取消的求助会在这里展示'
+                  : '换个筛选条件看看，或者主动发布一条求助吧'
+              }
+              showBtn={scopeFilter === 'public'}
               btnText='去发布求助'
               onBtnClick={handleGoPublish}
             />

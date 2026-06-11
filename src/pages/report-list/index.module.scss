@@ -155,3 +155,45 @@
 .emptyWrap {
   padding: 120px 48px;
 }
+
+.sectionLabel {
+  font-size: 24px;
+  color: #999999;
+  font-weight: 500;
+  margin-top: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.resultBox {
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.resultProcessed {
+  background: #E8F7EE;
+}
+
+.resultRejected {
+  background: #FFECE8;
+}
+
+.resultLabel {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.resultProcessed .resultLabel {
+  color: #00B42A;
+}
+
+.resultRejected .resultLabel {
+  color: #F53F3F;
+}
+
+.resultText {
+  font-size: 24px;
+  color: #666666;
+  line-height: 1.5;
+}

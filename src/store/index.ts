@@ -209,7 +209,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           ? {
               ...r,
               status: approved ? 'processed' : 'rejected',
-              detail: handleNote ? `${r.detail}\n\n处理备注：${handleNote}` : r.detail
+              handleNote: handleNote || r.handleNote
             }
           : r
       )

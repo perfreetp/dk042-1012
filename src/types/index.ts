@@ -121,5 +121,6 @@ export interface ReportItem {
   detail: string;
   images: string[];
   status: 'pending' | 'processed' | 'rejected';
+  handleNote?: string;
   createdAt: string;
 }

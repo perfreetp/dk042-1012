@@ -7,23 +7,63 @@ import EmptyState from '@/components/EmptyState';
 import { useAppStore } from '@/store';
 import { currentUser } from '@/data/notices';
 import type { HelperStatus } from '@/types';
-import { helperStatusList } from '@/utils';
 import styles from './index.module.scss';
 
-type TabType = 'all' | HelperStatus;
+type GroupKey = 'review' | 'public' | 'ongoing' | 'ended';
 
-const tabList: { key: TabType; label: string }[] = [
-  { key: 'all', label: '全部' },
-  { key: 'pending_review', label: '待审核' },
-  { key: 'pending', label: '待响应' },
-  { key: 'accepted', label: '已接单' },
-  { key: 'in_progress', label: '进行中' },
-  { key: 'completed', label: '已完成' },
-  { key: 'cancelled', label: '已取消' }
+const groupConfig: {
+  key: GroupKey;
+  label: string;
+  emoji: string;
+  desc: string;
+  statuses: HelperStatus[];
+  emptyText: string;
+  color: string;
+  bgColor: string;
+}[] = [
+  {
+    key: 'review',
+    label: '审核中',
+    emoji: '⏳',
+    desc: '等待管理员审核',
+    statuses: ['pending_review'],
+    emptyText: '没有待审核的求助',
+    color: '#FFAB00',
+    bgColor: '#FFF8E1'
+  },
+  {
+    key: 'public',
+    label: '公开中',
+    emoji: '🔔',
+    desc: '广场可见，等待响应',
+    statuses: ['pending'],
+    emptyText: '没有公开中的求助',
+    color: '#FF7A45',
+    bgColor: '#FFF2EC'
+  },
+  {
+    key: 'ongoing',
+    label: '进行中',
+    emoji: '🤝',
+    desc: '已有人响应，互助进行',
+    statuses: ['accepted', 'in_progress'],
+    emptyText: '没有进行中的求助',
+    color: '#722ED1',
+    bgColor: '#F3E8FF'
+  },
+  {
+    key: 'ended',
+    label: '已结束',
+    emoji: '✅',
+    desc: '已完成或已取消',
+    statuses: ['completed', 'cancelled'],
+    emptyText: '还没有结束的求助',
+    color: '#36B37E',
+    bgColor: '#E8FFF0'
+  }
 ];
 
 const MyRequestsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('all');
   const allHelpers = useAppStore((s) => s.helpers);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -45,18 +85,29 @@ const MyRequestsPage: React.FC = () => {
     }, 500);
   });
 
-  const filteredHelpers = useMemo(() => {
-    if (activeTab === 'all') return helpers;
-    return helpers.filter(h => h.status === activeTab);
-  }, [helpers, activeTab]);
+  const groupedHelpers = useMemo(() => {
+    const result: Record<GroupKey, typeof helpers> = {
+      review: [],
+      public: [],
+      ongoing: [],
+      ended: []
+    };
+    groupConfig.forEach((g) => {
+      result[g.key] = helpers.filter((h) => g.statuses.includes(h.status));
+    });
+    return result;
+  }, [helpers]);
 
   const stats = useMemo(() => {
     return {
       total: helpers.length,
-      completed: helpers.filter(h => h.status === 'completed').length,
-      ongoing: helpers.filter(h => ['pending', 'accepted', 'in_progress'].includes(h.status)).length
+      review: groupedHelpers.review.length,
+      public: groupedHelpers.public.length,
+      ongoing: groupedHelpers.ongoing.length,
+      ended: groupedHelpers.ended.length,
+      completed: groupedHelpers.ended.filter((h) => h.status === 'completed').length
     };
-  }, [helpers]);
+  }, [helpers, groupedHelpers]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -70,39 +121,31 @@ const MyRequestsPage: React.FC = () => {
     Taro.switchTab({ url: '/pages/publish/index' });
   };
 
+  const scrollToGroup = (key: GroupKey) => {
+    const el = document.getElementById(`group-${key}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <View className={styles.page}>
       <View className={styles.header}>
         <View style={{ fontSize: '36px', fontWeight: '700', color: '#FFFFFF' }}>我发布的求助</View>
         <View style={{ fontSize: '24px', color: 'rgba(255,255,255,0.85)', marginTop: '8px' }}>
-          共发布 {stats.total} 条求助，完成率 {stats.total ? Math.round(stats.completed / stats.total * 100) : 0}%
+          共发布 {stats.total} 条求助，完成率{' '}
+          {stats.total ? Math.round((stats.completed / stats.total) * 100) : 0}%
         </View>
         <View className={styles.statsRow}>
-          <View className={styles.statCard}>
-            <View className={styles.statNum}>{stats.total}</View>
-            <View className={styles.statLabel}>总计</View>
-          </View>
-          <View className={styles.statCard}>
-            <View className={styles.statNum}>{stats.ongoing}</View>
-            <View className={styles.statLabel}>进行中</View>
-          </View>
-          <View className={styles.statCard}>
-            <View className={styles.statNum}>{stats.completed}</View>
-            <View className={styles.statLabel}>已完成</View>
-          </View>
+          {groupConfig.map((g) => (
+            <View
+              key={g.key}
+              className={styles.statCard}
+              onClick={() => scrollToGroup(g.key)}
+            >
+              <View className={styles.statNum}>{groupedHelpers[g.key].length}</View>
+              <View className={styles.statLabel}>{g.label}</View>
+            </View>
+          ))}
         </View>
-      </View>
-
-      <View className={styles.tabs}>
-        {tabList.map(tab => (
-          <View
-            key={tab.key}
-            className={classnames(styles.tabItem, activeTab === tab.key && styles.activeTab)}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </View>
-        ))}
       </View>
 
       <ScrollView
@@ -115,21 +158,46 @@ const MyRequestsPage: React.FC = () => {
         onRefresherRefresh={handleRefresh}
       >
         <View className={styles.listContainer}>
-          {filteredHelpers.length > 0 ? (
-            filteredHelpers.map(h => (
-              <HelperCard key={h.id} data={h} />
-            ))
-          ) : (
+          {helpers.length === 0 ? (
             <View className={styles.emptyWrap}>
               <EmptyState
                 emoji='📝'
-                title={activeTab === 'all' ? '还没有发布求助' : '该状态下暂无求助'}
-                text={activeTab === 'all' ? '有需要邻居帮忙的事情，就发条求助吧~' : '切换其他状态看看'}
-                showBtn={activeTab === 'all'}
+                title='还没有发布求助'
+                text='有需要邻居帮忙的事情，就发条求助吧~'
+                showBtn
                 btnText='去发布求助'
                 onBtnClick={handleGoPublish}
               />
             </View>
+          ) : (
+            groupConfig.map((g) => (
+              <View key={g.key} id={`group-${g.key}`} className={styles.groupBlock}>
+                <View className={styles.groupHeader}>
+                  <View className={styles.groupIcon} style={{ background: g.bgColor, color: g.color }}>
+                    {g.emoji}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View className={styles.groupTitle}>
+                      {g.label}
+                      <Text className={styles.groupCount} style={{ color: g.color }}>
+                        {groupedHelpers[g.key].length}
+                      </Text>
+                    </View>
+                    <View className={styles.groupDesc}>{g.desc}</View>
+                  </View>
+                </View>
+
+                {groupedHelpers[g.key].length > 0 ? (
+                  <View className={styles.groupList}>
+                    {groupedHelpers[g.key].map((h) => (
+                      <HelperCard key={h.id} data={h} />
+                    ))}
+                  </View>
+                ) : (
+                  <View className={styles.groupEmpty}>{g.emptyText}</View>
+                )}
+              </View>
+            ))
           )}
         </View>
       </ScrollView>

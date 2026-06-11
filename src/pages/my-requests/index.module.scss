@@ -10,7 +10,7 @@
 
 .statsRow {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   margin-top: 24px;
 }
 
@@ -19,12 +19,18 @@
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   border-radius: 16px;
-  padding: 20px 16px;
+  padding: 16px 8px;
   text-align: center;
+  transition: all 0.2s;
+
+  &:active {
+    transform: scale(0.96);
+    background: rgba(255, 255, 255, 0.3);
+  }
 }
 
 .statNum {
-  font-size: 40px;
+  font-size: 36px;
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.2;
@@ -33,44 +39,7 @@
 .statLabel {
   font-size: 22px;
   color: rgba(255, 255, 255, 0.85);
-  margin-top: 8px;
-}
-
-.tabs {
-  display: flex;
-  background: #FFFFFF;
-  padding: 0 16px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 1px solid #F0EBE6;
-}
-
-.tabItem {
-  flex: 1;
-  padding: 24px 0;
-  text-align: center;
-  font-size: 26px;
-  color: #666666;
-  position: relative;
-  transition: all 0.2s;
-}
-
-.activeTab {
-  color: #FF7A45;
-  font-weight: 600;
-}
-
-.activeTab::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 48px;
-  height: 4px;
-  border-radius: 2px;
-  background: #FF7A45;
+  margin-top: 6px;
 }
 
 .content {
@@ -80,9 +49,71 @@
 .listContainer {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 32px;
 }
 
 .emptyWrap {
   padding: 80px 0;
+}
+
+.groupBlock {
+  margin-bottom: 8px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 4px 0;
+}
+
+.groupIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.groupTitle {
+  font-size: 30px;
+  font-weight: 700;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.groupCount {
+  font-size: 24px;
+  font-weight: 600;
+  padding: 2px 10px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.groupDesc {
+  font-size: 22px;
+  color: #999999;
+  margin-top: 4px;
+}
+
+.groupList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.groupEmpty {
+  padding: 24px;
+  text-align: center;
+  font-size: 24px;
+  color: #999999;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 2px dashed #F0EBE6;
 }

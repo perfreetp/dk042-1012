@@ -54,6 +54,13 @@ const HelperCard: React.FC<HelperCardProps> = ({ data, onClick }) => {
       <View className={styles.title}>{data.title}</View>
       <View className={styles.desc}>{data.description}</View>
 
+      {data.status === 'cancelled' && data.cancelReason && (
+        <View className={styles.cancelReasonBox}>
+          <View className={styles.cancelReasonLabel}>取消/驳回原因</View>
+          <View className={styles.cancelReasonText}>{data.cancelReason}</View>
+        </View>
+      )}
+
       <View className={styles.cardMeta}>
         <View className={styles.metaItem}>
           <Text>📍</Text>
